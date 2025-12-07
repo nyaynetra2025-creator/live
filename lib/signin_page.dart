@@ -156,18 +156,10 @@ class _SignInPageState extends State<SignInPage> with SingleTickerProviderStateM
                           children: [
                             Hero(
                               tag: 'app_logo',
-                              child: Container(
+                              child: Image.asset(
+                                'assets/images/nyaynetra_logo.png',
                                 height: 48,
                                 width: 48,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFF6B21D), // Accent color
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.gavel,
-                                  color: Color(0xFF253D7A), // Primary color
-                                  size: 28,
-                                ),
                               ),
                             ),
                             const SizedBox(width: 12),

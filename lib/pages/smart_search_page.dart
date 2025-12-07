@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../services/ai_service.dart';
 import '../widgets/animated_widgets.dart';
-import '../utils/animation_utils.dart';
 
 class SmartSearchPage extends StatefulWidget {
   final String initialQuery;
@@ -16,15 +16,51 @@ class SmartSearchPage extends StatefulWidget {
 class _SmartSearchPageState extends State<SmartSearchPage> {
   final TextEditingController _searchController = TextEditingController();
   final AiService _aiService = AiService();
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
   String _answer = '';
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _speech = stt.SpeechToText();
     _searchController.text = widget.initialQuery;
     if (widget.initialQuery.isNotEmpty) {
       _performSearch(widget.initialQuery);
+    }
+  }
+
+  Future<void> _listen() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) => print('onStatus: $val'),
+        onError: (val) => print('onError: $val'),
+      );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (val) {
+            setState(() {
+              _searchController.text = val.recognizedWords;
+              if (val.hasConfidenceRating && val.confidence > 0) {
+                // Optional: handle confidence
+              }
+            });
+          },
+        );
+      } else {
+        // Handle microphone not available
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Microphone not available')),
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+      if (_searchController.text.isNotEmpty) {
+        _performSearch(_searchController.text);
+      }
     }
   }
 
@@ -66,6 +102,13 @@ class _SmartSearchPageState extends State<SmartSearchPage> {
             border: InputBorder.none,
             hintStyle: TextStyle(
               color: isDarkMode ? const Color(0xFFA0AEC0) : const Color(0xFF687082),
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _isListening ? Icons.mic : Icons.mic_none,
+                color: _isListening ? Colors.red : (isDarkMode ? Colors.white70 : Colors.grey),
+              ),
+              onPressed: _listen,
             ),
           ),
           onSubmitted: _performSearch,

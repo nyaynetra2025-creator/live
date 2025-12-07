@@ -213,7 +213,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 final messages = snapshot.data!;
                 print('Messages count: ${messages.length}');
                 
-                final reversedMessages = messages.reversed.toList();
+                // Messages are already ordered by created_at DESC from SupabaseService
+                // So index 0 is the newest message.
+                // We want to display them starting from the bottom, so reverse: true in ListView is correct.
+                // But we don't need to reverse the list itself if the ListView is reversed.
 
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   _markMessagesAsRead();
@@ -268,9 +271,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   controller: _scrollController,
                   reverse: true,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                  itemCount: reversedMessages.length,
+                  itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    final msg = reversedMessages[index];
+                    final msg = messages[index];
                     final isMe = msg['sender_id'] == _supabaseService.currentUser?.id;
                     final status = msg['status'] ?? 'sent';
                     

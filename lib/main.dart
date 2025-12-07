@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'welcome_page.dart';
 import 'signin_page.dart';
 import 'signup_page.dart';
@@ -22,31 +23,63 @@ import 'pages/coming_soon_page.dart';
 import 'pages/document_scanner_page.dart';
 import 'pages/case_law_search_page.dart';
 import 'pages/legal_rights_module_page.dart';
+import 'pages/laws_info_page.dart';
 import 'pages/bookmarks_page.dart';
 import 'pages/my_cases_page.dart';
 import 'pages/lawyer_signin_page.dart';
 import 'pages/lawyer_signup_page.dart';
 import 'pages/splash_page.dart';
+import 'pages/language_selection_page.dart';
+import 'services/language_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  await dotenv.load(fileName: "assets/.env");
 
   await Supabase.initialize(
-    url: 'https://laxyyckscgflsnbxpeso.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxheHl5Y2tzY2dmbHNuYnhwZXNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4ODcyMjQsImV4cCI6MjA3OTQ2MzIyNH0.jlFUxA1hop8bYSVVdJ6UuAPiIa0-C8tVd6zl0rmMeeU',
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
+
+  // Initialize language service
+  await LanguageService.instance.initialize();
 
   runApp(const NyaynetraApp());
 }
 
-class NyaynetraApp extends StatelessWidget {
+class NyaynetraApp extends StatefulWidget {
   const NyaynetraApp({super.key});
+
+  @override
+  State<NyaynetraApp> createState() => _NyaynetraAppState();
+}
+
+class _NyaynetraAppState extends State<NyaynetraApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Listen to language changes and rebuild the app
+    LanguageService.instance.addListener(_onLanguageChanged);
+  }
+
+  @override
+  void dispose() {
+    LanguageService.instance.removeListener(_onLanguageChanged);
+    super.dispose();
+  }
+
+  void _onLanguageChanged() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Nyaynetra',
+      // Set locale based on selected language
+      locale: Locale(LanguageService.instance.currentLanguageCode),
       theme: ThemeData(
         primaryColor: const Color(0xFF253D7A),
         colorScheme: ColorScheme.fromSwatch().copyWith(
@@ -90,11 +123,14 @@ class NyaynetraApp extends StatelessWidget {
         '/document-scanner': (_) => const DocumentScannerPage(),
         '/case-law': (_) => const CaseLawSearchPage(),
         '/legal-rights': (_) => const LegalRightsModulePage(),
+        '/laws-info': (_) => const LawsInfoPage(),
         '/bookmarks': (_) => const BookmarksPage(),
         '/my-cases': (_) => const MyCasesPage(),
         '/lawyer_signin': (_) => const LawyerSignInPage(),
         '/lawyer_signup': (_) => const LawyerSignUpPage(),
+        '/language': (_) => const LanguageSelectionPage(),
       },
     );
   }
 }
+

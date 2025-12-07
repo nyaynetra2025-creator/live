@@ -89,7 +89,7 @@ class _LawyerSignUpPageState extends State<LawyerSignUpPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.person_add, size: 64, color: primaryColor),
+                  Image.asset('assets/images/nyaynetra_logo.png', height: 64, width: 64),
                   const SizedBox(height: 24),
                   Text(
                     'Join our network of legal professionals.',

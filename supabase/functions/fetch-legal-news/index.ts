@@ -14,23 +14,36 @@ interface NewsItem {
     link: string
     subtitle?: string
     category: string
+    language: string
 }
 
+const SUPPORTED_LANGUAGES = [
+    { code: 'en', hl: 'en-IN', ceid: 'IN:en' },
+    { code: 'hi', hl: 'hi', ceid: 'IN:hi' },
+    { code: 'bn', hl: 'bn', ceid: 'IN:bn' }, // Bengali
+    { code: 'te', hl: 'te', ceid: 'IN:te' }, // Telugu
+    { code: 'mr', hl: 'mr', ceid: 'IN:mr' }, // Marathi
+    { code: 'ta', hl: 'ta', ceid: 'IN:ta' }, // Tamil
+    // Add others supported by Google News
+];
+
 // Parse Google News RSS feed
-async function fetchGoogleNewsRSS(query: string): Promise<NewsItem[]> {
-    const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-IN&gl=IN&ceid=IN:en`
+async function fetchGoogleNewsRSS(query: string, langSettings: any): Promise<NewsItem[]> {
+    const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=${langSettings.hl}&gl=IN&ceid=${langSettings.ceid}`
 
     try {
         const response = await fetch(rssUrl)
         const xml = await response.text()
 
         const items: NewsItem[] = []
-        const regex = /<item>.*?<title>(.*?)<\/title>.*?<link>(.*?)<\/link>/gs
+        // Simple regex to parse RSS (DOMParser is not available in Deno without libraries, this is robust enough for RSS)
+        const regex = /<item>.*?<title>(.*?)<\/title>.*?<link>(.*?)<\/link>.*?<pubDate>(.*?)<\/pubDate>/gs
         const matches = xml.matchAll(regex)
 
         for (const match of matches) {
             let title = match[1] || 'Legal Update'
             const link = match[2] || ''
+            // const pubDate = match[3] || ''
 
             // Clean up title (remove source name like " - Live Law")
             if (title.includes(' - ')) {
@@ -40,131 +53,116 @@ async function fetchGoogleNewsRSS(query: string): Promise<NewsItem[]> {
             items.push({
                 title,
                 link,
-                subtitle: 'Tap to read full coverage',
-                category: 'general'
+                subtitle: langSettings.code === 'en' ? 'Latest Legal Update' : 'नवीनतम कानूनी अपडेट',
+                category: 'general',
+                language: langSettings.code
             })
-
-            if (items.length >= 20) break // Limit to 20 articles per fetch
         }
-
         return items
     } catch (error) {
-        console.error('Error fetching Google News RSS:', error)
+        console.error(`Error fetching RSS for ${langSettings.code}:`, error)
         return []
     }
 }
 
-// Fetch from multiple legal news sources
-async function fetchAllLegalNews(): Promise<NewsItem[]> {
-    const newsQueries = [
-        { query: 'India Supreme Court Legal News', category: 'supreme-court' },
-        { query: 'India Legal Rights Consumer Protection', category: 'consumer-law' },
-        { query: 'India Labor Law Employment Rights', category: 'labor-law' },
-        { query: 'India Property Law Real Estate', category: 'property-law' },
-    ]
-
-    const allNews: NewsItem[] = []
-
-    for (const { query, category } of newsQueries) {
-        const news = await fetchGoogleNewsRSS(query)
-        // Add category to each item
-        news.forEach(item => {
-            item.category = category
-            allNews.push(item)
-        })
-    }
-
-    return allNews
-}
-
 serve(async (req) => {
-    // Handle CORS preflight
+    // Handle CORS preflight requests
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
     }
 
     try {
         // Initialize Supabase client
-        const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-        const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        const supabase = createClient(supabaseUrl, supabaseServiceKey)
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        const supabase = createClient(supabaseUrl, supabaseKey)
 
-        console.log('Fetching legal news from RSS feeds...')
-        const newsItems = await fetchAllLegalNews()
-        console.log(`Found ${newsItems.length} news articles`)
+        let allNewsItems: NewsItem[] = []
 
-        if (newsItems.length === 0) {
-            return new Response(
-                JSON.stringify({ message: 'No news found', inserted: 0 }),
-                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
+        for (const lang of SUPPORTED_LANGUAGES) {
+            // Fetch specific queries for each language
+            let queries: string[] = []
+
+            if (lang.code === 'en') {
+                queries = ['Supreme Court of India', 'High Court Judgment', 'New Laws India', 'Legal Rights India']
+            } else if (lang.code === 'hi') {
+                queries = ['सुप्रीम कोर्ट भारत', 'हाई कोर्ट फैसला', 'नए कानून भारत', 'कानूनी अधिकार']
+            } else if (lang.code === 'mr') {
+                queries = ['सर्वोच्च न्यायालय', 'उच्च न्यायालय निर्णय', 'नवीन कायदे']
+            } else {
+                // Fallback or specific queries for other languages
+                // For now, use English or simple translated terms if known, else skip
+                // Actually Google News supports English queries even with localized hl, but results might be mixed.
+                // Better to try native terms if possible, or broad terms.
+                // Let's use English queries for others but request localized content, Google often handles it.
+                queries = ['Supreme Court India', 'Legal News']
+            }
+
+            for (const query of queries) {
+                const items = await fetchGoogleNewsRSS(query, lang)
+                allNewsItems = [...allNewsItems, ...items]
+            }
         }
 
-        // Check for duplicates before inserting
-        const { data: existingNews } = await supabase
-            .from('legal_news')
-            .select('title, link')
-            .limit(100)
-
-        const existingTitles = new Set(existingNews?.map(n => n.title) || [])
-        const existingLinks = new Set(existingNews?.map(n => n.link) || [])
-
-        // Filter out duplicates
-        const newArticles = newsItems.filter(item =>
-            !existingTitles.has(item.title) &&
-            (!item.link || !existingLinks.has(item.link))
+        // Remove duplicates within the fetched batch (by link)
+        const uniqueNews = allNewsItems.filter((item, index, self) =>
+            index === self.findIndex((t) => (
+                t.link === item.link
+            ))
         )
 
-        console.log(`${newArticles.length} new articles to insert (${newsItems.length - newArticles.length} duplicates skipped)`)
+        console.log(`Fetched ${uniqueNews.length} unique articles across all languages`)
 
-        if (newArticles.length === 0) {
-            return new Response(
-                JSON.stringify({ message: 'No new articles to insert', inserted: 0 }),
-                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
+        // Insert into database
+        // We need to check for existing articles to avoid unique constraint violations if 'link' is unique
+        // But we don't have a unique constraint on link in the code definition I saw.
+        // However, avoiding duplicates is good.
 
-        // Insert new articles
-        const { data, error } = await supabase
-            .from('legal_news')
-            .insert(newArticles.map(item => ({
-                title: item.title,
-                subtitle: item.subtitle,
-                link: item.link,
-                category: item.category,
-                is_featured: false, // Auto-fetched articles are not featured by default
-            })))
+        let insertedCount = 0
 
-        if (error) {
-            console.error('Error inserting news:', error)
-            throw error
-        }
+        // Process in chunks to avoid huge requests
+        const chunkSize = 50
+        for (let i = 0; i < uniqueNews.length; i += chunkSize) {
+            const chunk = uniqueNews.slice(i, i + chunkSize);
 
-        console.log(`Successfully inserted ${newArticles.length} new articles`)
-
-        // Optional: Clean up old articles (keep only last 100)
-        const { data: allArticles } = await supabase
-            .from('legal_news')
-            .select('id')
-            .order('published_at', { ascending: false })
-            .range(100, 9999)
-
-        if (allArticles && allArticles.length > 0) {
-            const idsToDelete = allArticles.map(a => a.id)
-            await supabase
+            // Check which links already exist
+            const links = chunk.map(n => n.link)
+            const { data: existing } = await supabase
                 .from('legal_news')
-                .delete()
-                .in('id', idsToDelete)
-            console.log(`Cleaned up ${allArticles.length} old articles`)
+                .select('link')
+                .in('link', links)
+
+            const existingLinks = new Set(existing?.map(e => e.link) || [])
+
+            const newArticles = chunk.filter(n => !existingLinks.has(n.link))
+
+            if (newArticles.length > 0) {
+                const { error } = await supabase
+                    .from('legal_news')
+                    .insert(newArticles.map(item => ({
+                        title: item.title,
+                        subtitle: item.subtitle,
+                        link: item.link,
+                        category: item.category,
+                        is_featured: false,
+                        language: item.language
+                    })))
+
+                if (error) {
+                    console.error('Error inserting chunk:', error)
+                } else {
+                    insertedCount += newArticles.length
+                }
+            }
         }
+
+        console.log(`Successfully inserted ${insertedCount} new articles`)
 
         return new Response(
             JSON.stringify({
                 success: true,
                 message: 'News fetched and saved successfully',
-                inserted: newArticles.length,
-                total: newsItems.length,
-                duplicates: newsItems.length - newArticles.length
+                inserted: insertedCount
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )

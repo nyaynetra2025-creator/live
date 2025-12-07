@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'pages/smart_search_page.dart';
 import 'pages/news_detail_page.dart';
-import 'package:lottie/lottie.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'services/supabase_service.dart';
+import 'services/language_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -142,77 +140,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSearchBar(bool isDarkMode) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Container(
-        height: 56,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 6,
-              offset: const Offset(0, 4),
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: TextField(
-          style: TextStyle(
-            fontSize: 16,
-            color: isDarkMode
-                ? const Color(0xFFF5F5F7)
-                : const Color(0xFF121317),
-          ),
-          decoration: InputDecoration(
-            hintText: 'Search laws, sections, or issues',
-            hintStyle: TextStyle(
-              color: isDarkMode
-                  ? const Color(0xFFA0AEC0)
-                  : const Color(0xFF687082),
-            ),
-            prefixIcon: Icon(
-              Icons.search,
-              color: isDarkMode
-                  ? const Color(0xFFA0AEC0)
-                  : const Color(0xFF687082),
-              size: 24,
-            ),
-            filled: true,
-            fillColor: isDarkMode ? const Color(0xFF14171E) : Colors.white,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF253D79), width: 2),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
-            ),
-          ),
-          onSubmitted: (value) {
-            if (value.isNotEmpty) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SmartSearchPage(initialQuery: value),
-                ),
-              );
-            }
-          },
-        ),
-      ),
-    );
-  }
-
   Widget _buildQuickActions(BuildContext context, bool isDarkMode) {
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -227,8 +154,8 @@ class _HomePageState extends State<HomePage> {
           _buildQuickActionCard(
             context: context,
             icon: Icons.document_scanner_outlined,
-            label: 'Document Scanner',
-            title: 'Document Scanner',
+            label: LanguageService.instance.tr('document_scanner'),
+            title: LanguageService.instance.tr('document_scanner'),
             subtitle: 'Scan & analyze docs',
             isDarkMode: isDarkMode,
             isHighlighted: false,
@@ -236,39 +163,29 @@ class _HomePageState extends State<HomePage> {
           ),
           _buildQuickActionCard(
             context: context,
-            icon: Icons.gavel_outlined,
-            label: 'Case Law Search',
-            title: 'Case Law Search',
-            subtitle: 'Find landmark cases',
-            isDarkMode: isDarkMode,
-            isHighlighted: false,
-            onTap: () => Navigator.pushNamed(context, '/case-law'),
-          ),
-          _buildQuickActionCard(
-            context: context,
             icon: Icons.school_outlined,
-            label: 'Legal Rights',
-            title: 'Legal Rights',
-            subtitle: 'Learn your rights',
+            label: LanguageService.instance.tr('legal_rights'),
+            title: LanguageService.instance.tr('legal_rights'),
+            subtitle: LanguageService.instance.tr('know_rights'),
             isDarkMode: isDarkMode,
             isHighlighted: false,
             onTap: () => Navigator.pushNamed(context, '/legal-rights'),
           ),
           _buildQuickActionCard(
             context: context,
-            icon: Icons.gavel_outlined,
-            label: 'Case Law Search',
-            title: 'Case Law Search',
-            subtitle: 'Find landmark cases',
+            icon: Icons.balance_outlined,
+            label: LanguageService.instance.tr('laws_acts'),
+            title: LanguageService.instance.tr('laws_acts'),
+            subtitle: 'Live updates',
             isDarkMode: isDarkMode,
             isHighlighted: false,
-            onTap: () => Navigator.pushNamed(context, '/case-law'),
+            onTap: () => Navigator.pushNamed(context, '/laws-info'),
           ),
           _buildQuickActionCard(
             context: context,
             icon: Icons.smart_toy_outlined,
             label: 'AI',
-            title: 'AI Chatbot',
+            title: LanguageService.instance.tr('ai_chatbot'),
             subtitle: 'Get instant answers',
             isDarkMode: isDarkMode,
             isHighlighted: true,
@@ -289,75 +206,15 @@ class _HomePageState extends State<HomePage> {
     required bool isHighlighted,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return _QuickActionCard(
+      context: context,
+      icon: icon,
+      label: label,
+      title: title,
+      subtitle: subtitle,
+      isDarkMode: isDarkMode,
+      isHighlighted: isHighlighted,
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isHighlighted
-              ? (isDarkMode
-                    ? const Color(0xFFF6B21D).withOpacity(0.2)
-                    : const Color(0xFFF6B21D).withOpacity(0.1))
-              : (isDarkMode ? const Color(0xFF1F2937) : Colors.white),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isHighlighted
-                ? const Color(0xFFF6B21D)
-                : (isDarkMode
-                      ? const Color(0xFF374151)
-                      : const Color(0xFFE5E7EB)),
-            width: isHighlighted ? 2 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 6,
-              offset: const Offset(0, 4),
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              icon,
-              color: isHighlighted
-                  ? const Color(0xFFF6B21D)
-                  : (isDarkMode
-                        ? const Color(0xFFF6B21D)
-                        : const Color(0xFF253D79)),
-              size: 24,
-            ),
-            const Spacer(),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                height: 1.2,
-                color: isDarkMode
-                    ? const Color(0xFFF5F5F7)
-                    : const Color(0xFF121317),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 14,
-                color: isDarkMode
-                    ? const Color(0xFFA0AEC0)
-                    : const Color(0xFF687082),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -373,7 +230,7 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Trending Legal News',
+                LanguageService.instance.tr('legal_news'),
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -407,7 +264,10 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 16),
           StreamBuilder<List<Map<String, dynamic>>>(
-            stream: _supabaseService.getLegalNewsStream(limit: 50),
+            stream: _supabaseService.getLegalNewsStream(
+              limit: 50,
+              language: LanguageService.instance.currentLanguageCode,
+            ),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
@@ -732,28 +592,21 @@ class _HomePageState extends State<HomePage> {
             children: [
               _buildNavItem(
                 icon: Icons.home_outlined,
-                label: 'Home',
+                label: LanguageService.instance.tr('home'),
                 isActive: true,
                 isDarkMode: isDarkMode,
                 onTap: () {},
               ),
               _buildNavItem(
                 icon: Icons.balance_outlined,
-                label: 'Lawyers',
+                label: LanguageService.instance.tr('lawyers'),
                 isActive: false,
                 isDarkMode: isDarkMode,
                 onTap: () => Navigator.pushNamed(context, '/lawyers'),
               ),
               _buildNavItem(
-                icon: Icons.work_outline,
-                label: 'My Cases',
-                isActive: false,
-                isDarkMode: isDarkMode,
-                onTap: () => Navigator.pushNamed(context, '/my-cases'),
-              ),
-              _buildNavItem(
                 icon: Icons.person_outline,
-                label: 'Profile',
+                label: LanguageService.instance.tr('profile'),
                 isActive: false,
                 isDarkMode: isDarkMode,
                 onTap: () => Navigator.pushNamed(context, '/profile'),
@@ -794,6 +647,149 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickActionCard extends StatefulWidget {
+  final BuildContext context;
+  final IconData icon;
+  final String label;
+  final String title;
+  final String subtitle;
+  final bool isDarkMode;
+  final bool isHighlighted;
+  final VoidCallback onTap;
+
+  const _QuickActionCard({
+    required this.context,
+    required this.icon,
+    required this.label,
+    required this.title,
+    required this.subtitle,
+    required this.isDarkMode,
+    required this.isHighlighted,
+    required this.onTap,
+  });
+
+  @override
+  State<_QuickActionCard> createState() => _QuickActionCardState();
+}
+
+class _QuickActionCardState extends State<_QuickActionCard> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) => _controller.reverse(),
+      onTapCancel: () => _controller.reverse(),
+      onTap: widget.onTap,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: widget.isHighlighted
+                  ? (widget.isDarkMode
+                      ? [const Color(0xFFF6B21D).withOpacity(0.25), const Color(0xFFF6B21D).withOpacity(0.15)]
+                      : [const Color(0xFFFFFBEB), const Color(0xFFFEF3C7)])
+                  : (widget.isDarkMode
+                      ? [const Color(0xFF1F2937), const Color(0xFF111827)]
+                      : [Colors.white, const Color(0xFFF8FAFC)]),
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: widget.isHighlighted
+                  ? const Color(0xFFF6B21D)
+                  : (widget.isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white),
+              width: widget.isHighlighted ? 1.5 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: widget.isHighlighted
+                    ? const Color(0xFFF6B21D).withOpacity(0.15)
+                    : Colors.black.withOpacity(0.06),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+                spreadRadius: -2,
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: widget.isHighlighted
+                      ? const Color(0xFFF6B21D).withOpacity(0.2)
+                      : (widget.isDarkMode ? Colors.white.withOpacity(0.05) : const Color(0xFFF1F5F9)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  widget.icon,
+                  color: widget.isHighlighted
+                      ? const Color(0xFFD97706)
+                      : (widget.isDarkMode ? const Color(0xFFF6B21D) : const Color(0xFF253D79)),
+                  size: 24,
+                ),
+              ),
+              const Spacer(),
+              Flexible(
+                child: Text(
+                  widget.title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    height: 1.2,
+                    color: widget.isDarkMode ? const Color(0xFFF5F5F7) : const Color(0xFF1E293B),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Flexible(
+                child: Text(
+                  widget.subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: widget.isDarkMode ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

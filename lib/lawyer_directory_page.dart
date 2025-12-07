@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'services/supabase_service.dart';
 import 'pages/chat_detail_page.dart';
 

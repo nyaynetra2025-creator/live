@@ -52,7 +52,7 @@ class _LawyerSignInPageState extends State<LawyerSignInPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.login, size: 64, color: Color(0xFF253D7A)),
+              Image.asset('assets/images/nyaynetra_logo.png', height: 64, width: 64),
               const SizedBox(height: 24),
               const Text(
                 'Welcome back, Advocate!',

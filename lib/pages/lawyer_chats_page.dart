@@ -11,8 +11,6 @@ class LawyerChatsPage extends StatefulWidget {
 
 class _LawyerChatsPageState extends State<LawyerChatsPage> {
   final Color _primary = const Color(0xFF253D7A);
-  final Color _bgLight = const Color(0xFFF6F7F8);
-  final Color _bgDark = const Color(0xFF14141E);
 
   @override
   Widget build(BuildContext context) {

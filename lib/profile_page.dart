@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'services/language_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -25,9 +26,38 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadUserData() async {
     final user = supabase.auth.currentUser;
     if (user != null) {
+      String name = user.userMetadata?['full_name'] ?? '';
+      
+      // If name is empty in metadata, try fetching from profiles table
+      if (name.isEmpty) {
+        try {
+          final profile = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', user.id)
+              .maybeSingle();
+          
+          if (profile != null && profile['full_name'] != null) {
+            name = profile['full_name'];
+          }
+        } catch (e) {
+          debugPrint('Error fetching profile: $e');
+        }
+      }
+
       setState(() {
         userEmail = user.email ?? '';
-        userName = user.userMetadata?['name'] ?? userEmail.split('@').first;
+        String rawName = name.isNotEmpty ? name : userEmail.split('@').first;
+        
+        // Capitalize first letter of each word
+        if (rawName.isNotEmpty) {
+          userName = rawName.split(' ').map((word) {
+            if (word.isEmpty) return '';
+            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+          }).join(' ');
+        } else {
+          userName = 'User';
+        }
       });
     }
   }
@@ -66,7 +96,7 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: isDarkMode ? const Color(0xFF14171E) : Colors.white,
         foregroundColor: isDarkMode ? Colors.white : const Color(0xFF121317),
         elevation: 0,
-        title: const Text('Profile'),
+        title: Text(LanguageService.instance.tr('profile')),
       ),
       body: ListView(
         children: [
@@ -113,27 +143,29 @@ class _ProfilePageState extends State<ProfilePage> {
           
           // Settings Section
           _buildSection(
-            'Settings',
+            LanguageService.instance.tr('settings'),
             [
               _buildSwitchTile(
                 icon: Icons.dark_mode,
-                title: 'Dark Mode',
+                title: LanguageService.instance.tr('dark_mode'),
                 value: _isDarkMode,
                 onChanged: _toggleDarkMode,
                 isDarkMode: isDarkMode,
               ),
               _buildTile(
                 icon: Icons.notifications_outlined,
-                title: 'Notifications',
+                title: LanguageService.instance.tr('notifications'),
                 subtitle: 'Manage notification preferences',
                 onTap: () {},
                 isDarkMode: isDarkMode,
               ),
               _buildTile(
                 icon: Icons.language,
-                title: 'Language',
-                subtitle: 'English',
-                onTap: () {},
+                title: LanguageService.instance.tr('language'),
+                subtitle: LanguageService.instance.currentLanguage.nativeName,
+                onTap: () {
+                  Navigator.pushNamed(context, '/language').then((_) => setState(() {}));
+                },
                 isDarkMode: isDarkMode,
               ),
             ],
@@ -144,18 +176,18 @@ class _ProfilePageState extends State<ProfilePage> {
           
           // Saved Items
           _buildSection(
-            'Saved',
+            LanguageService.instance.tr('saved'),
             [
               _buildTile(
                 icon: Icons.bookmark_outline,
-                title: 'Bookmarks',
+                title: LanguageService.instance.tr('bookmarks'),
                 subtitle: 'Saved articles and resources',
                 onTap: () => Navigator.pushNamed(context, '/bookmarks'),
                 isDarkMode: isDarkMode,
               ),
               _buildTile(
                 icon: Icons.download_outlined,
-                title: 'Downloads',
+                title: LanguageService.instance.tr('downloads'),
                 subtitle: 'Downloaded documents',
                 onTap: () {},
                 isDarkMode: isDarkMode,
@@ -168,7 +200,7 @@ class _ProfilePageState extends State<ProfilePage> {
           
           // About Section
           _buildSection(
-            'About',
+            LanguageService.instance.tr('about'),
             [
               _buildTile(
                 icon: Icons.info_outline,
@@ -179,19 +211,19 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               _buildTile(
                 icon: Icons.privacy_tip_outlined,
-                title: 'Privacy Policy',
+                title: LanguageService.instance.tr('privacy_policy'),
                 onTap: () {},
                 isDarkMode: isDarkMode,
               ),
               _buildTile(
                 icon: Icons.description_outlined,
-                title: 'Terms of Service',
+                title: LanguageService.instance.tr('terms_of_service'),
                 onTap: () {},
                 isDarkMode: isDarkMode,
               ),
               _buildTile(
                 icon: Icons.help_outline,
-                title: 'Help & Support',
+                title: LanguageService.instance.tr('help_support'),
                 onTap: () {},
                 isDarkMode: isDarkMode,
               ),
@@ -212,7 +244,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 }
               },
               icon: const Icon(Icons.logout),
-              label: const Text('Logout'),
+              label: Text(LanguageService.instance.tr('logout')),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.red,
                 padding: const EdgeInsets.symmetric(vertical: 16),

@@ -427,12 +427,11 @@ class SupabaseService {
     int limit = 50,
   }) async {
     try {
-      var query = client
+      dynamic query = client
           .from('legal_news')
-          .select()
-          .order('published_at', ascending: false)
-          .limit(limit);
+          .select();
 
+      // Apply filters first (before order and limit)
       if (category != null) {
         query = query.eq('category', category);
       }
@@ -441,7 +440,10 @@ class SupabaseService {
         query = query.eq('is_featured', isFeatured);
       }
 
-      return List<Map<String, dynamic>>.from(await query);
+      // Then apply order and limit
+      final result = await query.order('published_at', ascending: false).limit(limit);
+
+      return List<Map<String, dynamic>>.from(result);
     } catch (e) {
       print('getLegalNews error: $e');
       return [];
@@ -453,11 +455,13 @@ class SupabaseService {
   Stream<List<Map<String, dynamic>>> getLegalNewsStream({
     String? category,
     int limit = 50,
+    String language = 'en',
   }) {
     try {
-      var query = client
+      final query = client
           .from('legal_news')
           .stream(primaryKey: ['id'])
+          .eq('language', language) // Filter by language
           .order('published_at', ascending: false)
           .limit(limit);
 
