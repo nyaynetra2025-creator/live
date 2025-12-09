@@ -24,24 +24,26 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          curl -X POST "$SUPABASE_URL/functions/v1/fetch-legal-rights" \
+          # Capture HTTP code separately from response body
+          HTTP_CODE=$(curl -s -X POST "$SUPABASE_URL/functions/v1/fetch-legal-rights" \
             -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
             -H "Content-Type: application/json" \
             -d '{}' \
-            -w "\n%{http_code}" \
-            -o response.json
+            -o response.json \
+            -w "%{http_code}")
           
           echo "Response:"
-          cat response.json
+          cat response.json || echo "(empty response)"
+          echo ""
+          echo "HTTP Status Code: $HTTP_CODE"
           
-          # Check if request was successful
-          HTTP_CODE=$(tail -1 response.json)
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "Failed to update legal rights. HTTP code: $HTTP_CODE"
+          # Check if request was successful (2xx status codes)
+          if [[ "$HTTP_CODE" -lt 200 ]] || [[ "$HTTP_CODE" -ge 300 ]]; then
+            echo "❌ Failed to update legal rights. HTTP code: $HTTP_CODE"
             exit 1
           fi
           
-          echo "Legal rights updated successfully!"
+          echo "✅ Legal rights updated successfully!"
 
       - name: Notify on failure
         if: failure()
