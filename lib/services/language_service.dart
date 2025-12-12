@@ -676,3 +676,67 @@ class LanguageService extends ChangeNotifier {
   String tr(String key) => translate(key);
 }
 
+/// A widget that rebuilds when the language changes
+/// Use this to wrap any widget that needs to react to language changes
+class LocaleBuilder extends StatefulWidget {
+  final Widget Function(BuildContext context, String languageCode) builder;
+
+  const LocaleBuilder({
+    super.key,
+    required this.builder,
+  });
+
+  @override
+  State<LocaleBuilder> createState() => _LocaleBuilderState();
+}
+
+class _LocaleBuilderState extends State<LocaleBuilder> {
+  @override
+  void initState() {
+    super.initState();
+    LanguageService.instance.addListener(_onLanguageChanged);
+  }
+
+  @override
+  void dispose() {
+    LanguageService.instance.removeListener(_onLanguageChanged);
+    super.dispose();
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.builder(context, LanguageService.instance.currentLanguageCode);
+  }
+}
+
+/// Mixin for StatefulWidget states that need to react to language changes
+/// Usage: 
+/// class _MyPageState extends State<MyPage> with LanguageAwareMixin {
+///   // Your code here - the widget will automatically rebuild on language change
+/// }
+mixin LanguageAwareMixin<T extends StatefulWidget> on State<T> {
+  @override
+  void initState() {
+    super.initState();
+    LanguageService.instance.addListener(_onLanguageChanged);
+  }
+
+  @override
+  void dispose() {
+    LanguageService.instance.removeListener(_onLanguageChanged);
+    super.dispose();
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+}
+

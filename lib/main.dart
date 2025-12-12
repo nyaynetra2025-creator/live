@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'welcome_page.dart';
@@ -25,12 +26,24 @@ import 'pages/case_law_search_page.dart';
 import 'pages/legal_rights_module_page.dart';
 import 'pages/laws_info_page.dart';
 import 'pages/bookmarks_page.dart';
+import 'pages/bare_acts_page.dart';
+import 'pages/bare_act_category_page.dart';
+import 'pages/bare_act_detail_page.dart';
+import 'pages/state_laws_page.dart';
 import 'pages/my_cases_page.dart';
 import 'pages/lawyer_signin_page.dart';
 import 'pages/lawyer_signup_page.dart';
 import 'pages/splash_page.dart';
 import 'pages/language_selection_page.dart';
 import 'services/language_service.dart';
+
+import 'pages/rto_laws_page.dart';
+import 'pages/traffic_fines_page.dart';
+import 'pages/traffic_signs_page.dart';
+import 'pages/rto_services_page.dart';
+import 'pages/rto_search_page.dart';
+import 'pages/ll_quiz_page.dart';
+import 'pages/ipc_case_search_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -125,10 +138,22 @@ class _NyaynetraAppState extends State<NyaynetraApp> {
         '/legal-rights': (_) => const LegalRightsModulePage(),
         '/laws-info': (_) => const LawsInfoPage(),
         '/bookmarks': (_) => const BookmarksPage(),
+        '/bare-acts': (_) => const BareActsPage(),
+        '/bare-acts-category': (_) => const BareActCategoryPage(),
+        '/bare-act-detail': (_) => const BareActDetailPage(),
+        '/state-laws': (_) => const StateLawsPage(),
         '/my-cases': (_) => const MyCasesPage(),
         '/lawyer_signin': (_) => const LawyerSignInPage(),
         '/lawyer_signup': (_) => const LawyerSignUpPage(),
         '/language': (_) => const LanguageSelectionPage(),
+        // RTO & Vehicle Laws
+        '/rto-laws': (_) => const RTOLawsPage(),
+        '/traffic-fines': (_) => const TrafficFinesPage(),
+        '/traffic-signs': (_) => const TrafficSignsPage(),
+        '/rto-services': (_) => const RTOServicesPage(),
+        '/rto-search': (_) => const RTOSearchPage(),
+        '/ll-quiz': (_) => const LLQuizPage(),
+        '/ipc-case-search': (_) => const IPCCaseSearchPage(),
       },
     );
   }

@@ -2,45 +2,48 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class GeminiService {
-  static const String _apiKey = 'AIzaSyAYG1C73LE8RDo7sPelOF2aaU1k5A80_0E';
-  static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models';
+  // Note: This class is kept for backward compatibility but now uses OpenRouter
+  static const String _apiKey = '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';
+  static const String _baseUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
   Future<String> analyzeImage(String base64Image, String prompt) async {
     try {
-      final url = '$_baseUrl/gemini-1.5-flash:generateContent?key=$_apiKey';
-      
       final response = await http.post(
-        Uri.parse(url),
+        Uri.parse(_baseUrl),
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_apiKey',
+          'HTTP-Referer': 'https://nyaynetra.app',
+          'X-Title': 'Nyaynetra Document Analyzer',
         },
         body: jsonEncode({
-          'contents': [
+          'model': 'meta-llama/llama-4-scout:free',
+          'messages': [
             {
-              'parts': [
-                {'text': prompt},
+              'role': 'user',
+              'content': [
                 {
-                  'inline_data': {
-                    'mime_type': 'image/jpeg',
-                    'data': base64Image,
+                  'type': 'text',
+                  'text': prompt
+                },
+                {
+                  'type': 'image_url',
+                  'image_url': {
+                    'url': 'data:image/jpeg;base64,$base64Image'
                   }
                 }
               ]
             }
           ],
-          'generationConfig': {
-            'temperature': 0.4,
-            'topK': 32,
-            'topP': 1,
-            'maxOutputTokens': 1024,
-          }
+          'temperature': 0.4,
+          'max_tokens': 1024,
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['candidates'] != null && data['candidates'].isNotEmpty) {
-          final content = data['candidates'][0]['content']['parts'][0]['text'];
+        if (data['choices'] != null && data['choices'].isNotEmpty) {
+          final content = data['choices'][0]['message']['content'];
           return content ?? 'No response';
         }
       } else if (response.statusCode == 429) {

@@ -49,6 +49,9 @@ dependencies:
   permission_handler: ^11.3.0
   flutter_dotenv: ^6.0.0
   cached_network_image: ^3.4.1
+  flutter_tts: ^4.2.0
+  iconly: ^1.0.1
+  zego_uikit_prebuilt_call: ^4.0.0
 
 dev_dependencies:
   flutter_test:

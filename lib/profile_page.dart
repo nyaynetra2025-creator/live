@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:iconly/iconly.dart';
 import 'services/language_service.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -10,7 +11,7 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage> with LanguageAwareMixin<ProfilePage> {
   late final supabase = Supabase.instance.client;
   String userName = '';
   String userEmail = '';
@@ -146,21 +147,21 @@ class _ProfilePageState extends State<ProfilePage> {
             LanguageService.instance.tr('settings'),
             [
               _buildSwitchTile(
-                icon: Icons.dark_mode,
+                icon: IconlyLight.star,
                 title: LanguageService.instance.tr('dark_mode'),
                 value: _isDarkMode,
                 onChanged: _toggleDarkMode,
                 isDarkMode: isDarkMode,
               ),
               _buildTile(
-                icon: Icons.notifications_outlined,
+                icon: IconlyLight.notification,
                 title: LanguageService.instance.tr('notifications'),
                 subtitle: 'Manage notification preferences',
                 onTap: () {},
                 isDarkMode: isDarkMode,
               ),
               _buildTile(
-                icon: Icons.language,
+                icon: IconlyLight.discovery,
                 title: LanguageService.instance.tr('language'),
                 subtitle: LanguageService.instance.currentLanguage.nativeName,
                 onTap: () {
@@ -179,14 +180,14 @@ class _ProfilePageState extends State<ProfilePage> {
             LanguageService.instance.tr('saved'),
             [
               _buildTile(
-                icon: Icons.bookmark_outline,
+                icon: IconlyLight.bookmark,
                 title: LanguageService.instance.tr('bookmarks'),
                 subtitle: 'Saved articles and resources',
                 onTap: () => Navigator.pushNamed(context, '/bookmarks'),
                 isDarkMode: isDarkMode,
               ),
               _buildTile(
-                icon: Icons.download_outlined,
+                icon: IconlyLight.download,
                 title: LanguageService.instance.tr('downloads'),
                 subtitle: 'Downloaded documents',
                 onTap: () {},
@@ -203,26 +204,26 @@ class _ProfilePageState extends State<ProfilePage> {
             LanguageService.instance.tr('about'),
             [
               _buildTile(
-                icon: Icons.info_outline,
+                icon: IconlyLight.info_circle,
                 title: 'About Nyaynetra',
                 subtitle: 'Version 1.0.0',
                 onTap: () {},
                 isDarkMode: isDarkMode,
               ),
               _buildTile(
-                icon: Icons.privacy_tip_outlined,
+                icon: IconlyLight.shield_done,
                 title: LanguageService.instance.tr('privacy_policy'),
                 onTap: () {},
                 isDarkMode: isDarkMode,
               ),
               _buildTile(
-                icon: Icons.description_outlined,
+                icon: IconlyLight.document,
                 title: LanguageService.instance.tr('terms_of_service'),
                 onTap: () {},
                 isDarkMode: isDarkMode,
               ),
               _buildTile(
-                icon: Icons.help_outline,
+                icon: IconlyLight.message,
                 title: LanguageService.instance.tr('help_support'),
                 onTap: () {},
                 isDarkMode: isDarkMode,
@@ -243,7 +244,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
                 }
               },
-              icon: const Icon(Icons.logout),
+              icon: const Icon(IconlyLight.logout),
               label: Text(LanguageService.instance.tr('logout')),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.red,
@@ -306,7 +307,7 @@ class _ProfilePageState extends State<ProfilePage> {
             )
           : null,
       trailing: Icon(
-        Icons.chevron_right,
+        IconlyLight.arrow_right_2,
         color: isDarkMode ? Colors.grey : Colors.grey[400],
       ),
       onTap: onTap,

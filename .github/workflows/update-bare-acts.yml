@@ -1,0 +1,16 @@
+name: Update Bare Acts Data
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Runs every hour
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  update-bare-acts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invoke Supabase Edge Function
+        run: |
+          curl -X POST '${{ secrets.SUPABASE_URL }}/functions/v1/fetch-bare-acts' \
+          -H 'Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}' \
+          -H 'Content-Type: application/json'

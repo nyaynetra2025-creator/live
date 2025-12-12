@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/supabase_service.dart';
+import '../services/zego_call_service.dart';
 
 class ChatDetailPage extends StatefulWidget {
   final String otherUserId;
@@ -22,14 +24,80 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   final ScrollController _scrollController = ScrollController();
   Timer? _typingTimer;
   bool _isTyping = false;
+  String? _otherUserPhone;
 
   @override
   void initState() {
     super.initState();
     _markMessagesAsRead();
+    _fetchOtherUserPhone();
     _controller.addListener(_onTextChanged);
     print('ChatDetailPage opened with user: ${widget.otherUserId}');
     print('Current user: ${_supabaseService.currentUser?.id}');
+  }
+  
+  Future<void> _fetchOtherUserPhone() async {
+    try {
+      final profile = await SupabaseService.client
+          .from('profiles')
+          .select('phone')
+          .eq('id', widget.otherUserId)
+          .maybeSingle();
+      
+      if (profile != null && mounted) {
+        setState(() {
+          _otherUserPhone = profile['phone'];
+        });
+      }
+    } catch (e) {
+      print('Error fetching phone: $e');
+    }
+  }
+  
+  Future<void> _makePhoneCall() async {
+    if (_otherUserPhone == null || _otherUserPhone!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Phone number not available'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    final Uri phoneUri = Uri(scheme: 'tel', path: _otherUserPhone);
+    if (await canLaunchUrl(phoneUri)) {
+      await launchUrl(phoneUri);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not launch phone dialer'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _startVoiceCall() {
+    final currentUserId = _supabaseService.currentUser?.id;
+    final currentUserName = _supabaseService.currentUser?.userMetadata?['full_name'] ?? 'User';
+    
+    if (currentUserId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please login to make calls'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    
+    ZegoCallService.startVoiceCall(
+      context: context,
+      callerUserId: currentUserId,
+      callerUserName: currentUserName,
+      calleeUserId: widget.otherUserId,
+      calleeUserName: widget.otherUserName,
+    );
   }
 
   @override
@@ -169,12 +237,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.videocam_rounded, color: dark ? Colors.white70 : const Color(0xFF667EEA)),
-            onPressed: () {},
-          ),
-          IconButton(
             icon: Icon(Icons.call_rounded, color: dark ? Colors.white70 : const Color(0xFF667EEA)),
-            onPressed: () {},
+            onPressed: _startVoiceCall,
           ),
           IconButton(
             icon: Icon(Icons.more_vert, color: dark ? Colors.white70 : Colors.grey.shade600),

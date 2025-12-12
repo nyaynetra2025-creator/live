@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:iconly/iconly.dart';
 import 'pages/news_detail_page.dart';
 import 'services/supabase_service.dart';
 import 'services/language_service.dart';
@@ -125,7 +127,7 @@ class _HomePageState extends State<HomePage> {
           // Notification Icon
           IconButton(
             icon: Icon(
-              Icons.notifications_outlined,
+              IconlyLight.notification,
               color: isDarkMode
                   ? const Color(0xFFA0AEC0)
                   : const Color(0xFF687082),
@@ -153,7 +155,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           _buildQuickActionCard(
             context: context,
-            icon: Icons.document_scanner_outlined,
+            icon: IconlyLight.scan,
             label: LanguageService.instance.tr('document_scanner'),
             title: LanguageService.instance.tr('document_scanner'),
             subtitle: 'Scan & analyze docs',
@@ -163,7 +165,7 @@ class _HomePageState extends State<HomePage> {
           ),
           _buildQuickActionCard(
             context: context,
-            icon: Icons.school_outlined,
+            icon: IconlyLight.shield_done,
             label: LanguageService.instance.tr('legal_rights'),
             title: LanguageService.instance.tr('legal_rights'),
             subtitle: LanguageService.instance.tr('know_rights'),
@@ -173,17 +175,37 @@ class _HomePageState extends State<HomePage> {
           ),
           _buildQuickActionCard(
             context: context,
-            icon: Icons.balance_outlined,
-            label: LanguageService.instance.tr('laws_acts'),
-            title: LanguageService.instance.tr('laws_acts'),
-            subtitle: 'Live updates',
+            icon: Icons.directions_car,
+            label: 'Cycle/Car',
+            title: 'Vehicle Laws',
+            subtitle: 'RTO, Fines & Signs',
             isDarkMode: isDarkMode,
             isHighlighted: false,
-            onTap: () => Navigator.pushNamed(context, '/laws-info'),
+            onTap: () => Navigator.pushNamed(context, '/rto-laws'),
           ),
           _buildQuickActionCard(
             context: context,
-            icon: Icons.smart_toy_outlined,
+            icon: IconlyBold.paper,
+            label: 'Bare Acts',
+            title: 'Bare Acts',
+            subtitle: 'Central & State Laws',
+            isDarkMode: isDarkMode,
+            isHighlighted: false,
+            onTap: () => Navigator.pushNamed(context, '/bare-acts'),
+          ),
+          _buildQuickActionCard(
+            context: context,
+            icon: Icons.gavel,
+            label: 'IPC Cases',
+            title: 'IPC Case Search',
+            subtitle: 'Search by Section',
+            isDarkMode: isDarkMode,
+            isHighlighted: false,
+            onTap: () => Navigator.pushNamed(context, '/ipc-case-search'),
+          ),
+          _buildQuickActionCard(
+            context: context,
+            icon: IconlyLight.chat,
             label: 'AI',
             title: LanguageService.instance.tr('ai_chatbot'),
             subtitle: 'Get instant answers',
@@ -285,7 +307,7 @@ class _HomePageState extends State<HomePage> {
                     child: Column(
                       children: [
                         Icon(
-                          Icons.error_outline,
+                          IconlyLight.info_circle,
                           size: 48,
                           color: isDarkMode ? Colors.grey : Colors.grey[600],
                         ),
@@ -320,7 +342,7 @@ class _HomePageState extends State<HomePage> {
                     child: Column(
                       children: [
                         Icon(
-                          Icons.article_outlined,
+                          IconlyLight.paper,
                           size: 48,
                           color: isDarkMode ? Colors.grey : Colors.grey[600],
                         ),
@@ -517,7 +539,7 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(width: 8),
                       ],
                       Icon(
-                        Icons.touch_app,
+                        IconlyLight.arrow_right,
                         size: 14,
                         color: isDarkMode ? Colors.grey : Colors.grey[600],
                       ),
@@ -591,21 +613,21 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(
-                icon: Icons.home_outlined,
+                icon: IconlyBold.home,
                 label: LanguageService.instance.tr('home'),
                 isActive: true,
                 isDarkMode: isDarkMode,
                 onTap: () {},
               ),
               _buildNavItem(
-                icon: Icons.balance_outlined,
+                icon: IconlyLight.user_1,
                 label: LanguageService.instance.tr('lawyers'),
                 isActive: false,
                 isDarkMode: isDarkMode,
                 onTap: () => Navigator.pushNamed(context, '/lawyers'),
               ),
               _buildNavItem(
-                icon: Icons.person_outline,
+                icon: IconlyLight.profile,
                 label: LanguageService.instance.tr('profile'),
                 isActive: false,
                 isDarkMode: isDarkMode,
@@ -706,7 +728,10 @@ class _QuickActionCardState extends State<_QuickActionCard> with SingleTickerPro
       onTapDown: (_) => _controller.forward(),
       onTapUp: (_) => _controller.reverse(),
       onTapCancel: () => _controller.reverse(),
-      onTap: widget.onTap,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        widget.onTap();
+      },
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Container(
